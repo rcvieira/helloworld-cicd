@@ -1,4 +1,4 @@
-package me.rodrigovieira.helloworld_cicd;
+package me.rodrigovieira.helloworld_cicd.util;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
