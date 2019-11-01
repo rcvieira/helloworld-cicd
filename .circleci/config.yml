@@ -1,16 +1,10 @@
 version: 2.1
 jobs:
   build:
-    
-    working_directory: ~/helloworld-cicd
-    
     docker:
-      - image: circleci/circleci/openjdk:8-jdk-strech
-      
+      - image: circleci/circleci/openjdk:8-jdk-strech      
     steps:
-      
-      - checkout
-      
+      - checkout      
       - run:
         name: Compila
         command: mvn clean package -DskipTests
