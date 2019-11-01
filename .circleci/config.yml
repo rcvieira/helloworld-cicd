@@ -5,3 +5,8 @@ jobs:
       - image: circleci/openjdk:11-jdk-stretch      
     steps:
       - checkout
+      - run:
+          name: Build Step
+          command: |
+            echo 'Compilando...'
+            mvn clean package -DskipTests
