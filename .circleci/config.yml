@@ -42,7 +42,7 @@ jobs:
     docker:
       - image: buildpack-deps:trusty
     steps:
-       - docker-build-release
+       - deploy-to-heroku/docker-build-release
 workflows:
   version: 2.1
   build-deploy:
