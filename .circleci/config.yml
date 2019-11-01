@@ -2,6 +2,6 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/circleci/openjdk:8-jdk-strech      
+      - image: circleci/circleci/openjdk:openjdk-11      
     steps:
       - checkout
