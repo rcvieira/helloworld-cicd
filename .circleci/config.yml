@@ -44,6 +44,7 @@ workflows:
     jobs:
       - build
       - deploy-to-heroku/docker-build-release:
+          app-name: $HEROKU_APP_NAME
           requires:
             - build
           filters:
