@@ -20,5 +20,17 @@ jobs:
             - ~/.m2
           key: helloworld-cicd-{{ checksum "pom.xml" }}
           
-      - store_artifacts:
-          path: target/helloworld-cicd*.war
+      - setup_remote_docker
+      
+      - run:
+          name: Docker Build
+          command: |
+            set -x
+            VER="18.09.3"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+            
+      - run:
+          TAG=0.1.$CIRCLE_BUILD_NUM
+          docker build -t helloworld-cicd:$TAG
