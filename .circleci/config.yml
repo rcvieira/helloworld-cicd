@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  deploy-to-heroku: betterdoc/deploy-to-heroku@4.0.0
 jobs:
   build:
     docker:
@@ -36,3 +38,8 @@ jobs:
           command: | 
             TAG=0.1.$CIRCLE_BUILD_NUM
             docker build -t rcvieira/helloworld-cicd:$TAG .
+  deploy:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+       - docker-build-release
