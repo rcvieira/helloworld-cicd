@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  HelloWorld-CICD:
+  build:
     docker:
       - image: circleci/circleci/openjdk:8-jdk-strech      
     steps:
