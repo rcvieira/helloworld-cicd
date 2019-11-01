@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  deploy-to-heroku: betterdoc/deploy-to-heroku@4.0.0
 jobs:
   build:
     docker:
@@ -22,33 +20,34 @@ jobs:
             - ~/.m2
           key: helloworld-cicd-{{ checksum "pom.xml" }}
           
-#       - setup_remote_docker
-#       
-#       - run:
-#           name: Install Docker
-#           command: |
-#             set -x
-#             VER="18.09.3"
-#             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-#             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-#             sudo mv -f /tmp/docker/* /usr/bin
-#             
-#       - run: 
-#           name: Docker Build
-#           command: | 
-#             TAG=0.1.$CIRCLE_BUILD_NUM
-#             docker build -t rcvieira/helloworld-cicd:$TAG .
-  deploy-to-heroku/docker-build-release:
-    app-name: $HEROKU_APP_NAME
-# workflows:
-#   version: 2.1
-#   build-deploy:
-#     jobs:
-#       - build
-#       - deploy-to-heroku/docker-build-release:
-#           app-name: $HEROKU_APP_NAME
-#           requires:
-#             - build
-#           filters:
-#             branches:
-#               only: master
+      - setup_remote_docker
+      
+      - run:
+          name: Install Docker
+          command: |
+            set -x
+            VER="18.09.3"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            sudo mv -f /tmp/docker/* /usr/bin
+            
+#      - run: 
+#          name: Docker Build
+#          command: | 
+#            TAG=0.1.$CIRCLE_BUILD_NUM
+#            docker build -t rcvieira/helloworld-cicd:$TAG .
+#      
+      - run:
+          name: Install Heroku CLI
+          command: |
+            curl -L -o /tmp/heroku-install.sh https://cli-assets.heroku.com/install.sh
+            sh /tmp/heroku-install.sh
+            heroku --version
+       
+      - run:
+          name: Deploy to Heroku APP
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            heroku container:push web -a $HEROKU_APP_NAME
+            heroku container:release web -a $HEROKU_APP_NAME
+          
