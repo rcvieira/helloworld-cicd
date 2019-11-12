@@ -20,6 +20,9 @@ jobs:
           command: |
             echo 'Testando...'
             mvn test
+
+      - store_test_results:
+          path: surefire-reports
  
       - save_cache:
           paths:
