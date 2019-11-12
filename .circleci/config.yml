@@ -22,7 +22,7 @@ jobs:
             mvn test
 
       - store_test_results:
-          path: surefire-reports
+          path: target/surefire-reports
  
       - save_cache:
           paths:
