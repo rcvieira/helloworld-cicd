@@ -51,10 +51,16 @@ jobs:
       - image: 'circleci/openjdk:11-jdk'
     steps:
       - checkout
+      - restore_cache:
+          key: helloworld-cicd-{{ checksum "pom.xml" }}
       - run:
           name: Analyze on SonarCloud
           command: mvn verify sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
-
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: helloworld-cicd-{{ checksum "pom.xml" }}
+   
   deploy-phase:
     docker:
       - image: circleci/openjdk:11-jdk-stretch      
