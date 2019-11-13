@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build-phase:
+  commit-stage:
     docker:
       - image: circleci/openjdk:11-jdk-stretch      
     steps:
@@ -48,8 +48,8 @@ jobs:
           command: |
             docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
             heroku container:push web -a $HEROKU_APP_NAME
-
-  quality-phase:
+  
+  quality-stage:
     docker:
       - image: 'circleci/openjdk:11-jdk'
     steps:
@@ -63,8 +63,28 @@ jobs:
           paths:
             - ~/.m2
           key: helloworld-cicd-quality{{ checksum "pom.xml" }}
+
+  acceptance-stage:
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch
+    steps:
+      - checkout
+      - restore_cache:
+          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
+      - run:
+          name: Run APP 
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            docker run --name helloworld-cicd --rm -it -e PORT -p 8080:8080/tcp helloworld-cicd:latest
+      - run:
+          name: Integration Tests
+          command: mvn verify
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
    
-  deploy-phase:
+  user-acceptance-stage:
     docker:
       - image: circleci/openjdk:11-jdk-stretch      
     steps:               

@@ -1,4 +1,4 @@
-FROM jboss/wildfly
+FROM jboss/wildfly:18.0.0.Final
 
 ADD ./target/helloworld-cicd*.war /opt/jboss/wildfly/standalone/deployments/helloworld-cicd.war
 
