@@ -45,6 +45,9 @@ jobs:
           name: Run Acceptance Tests
           command: mvn verify -DskipUTs=true
 
+      - store_test_results:
+          path: target/failsafe-reports
+
       - setup_remote_docker
 
       - run:
