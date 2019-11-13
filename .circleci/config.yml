@@ -39,7 +39,7 @@ jobs:
           name: Acceptance Tests - Run App 
           command: |
             docker build -t helloworld-cicd:latest .
-            docker run --name helloworld-cicd --rm -it -p 8080:8080/tcp helloworld-cicd:latest
+            docker run --name helloworld-cicd --rm -d -p 8080:8080/tcp helloworld-cicd:latest
 
       - run:
           name: Run Acceptance Tests
