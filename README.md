@@ -12,4 +12,24 @@ Este projeto utiliza as seguintes tecnologias:
 * Java 8
 * Maven 3
 * Docker
+* PostgreSQL 11
 
+### Banco de Dados
+
+O banco de dados de desenvolvimento pode ser iniciado com o comando:
+
+```
+./database/start-postgres.sh
+```
+
+O cliente psql é iniciado com o comando:
+
+```
+./database/start-postgres-client.sh
+```
+
+E o banco de dados pode ser parado com o comando:
+
+```
+./database/stop-postgres.sh
+```
