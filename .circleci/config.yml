@@ -58,7 +58,7 @@ jobs:
           key: helloworld-cicd-quality{{ checksum "pom.xml" }}
       - run:
           name: Analyze on SonarCloud
-          command: mvn verify sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
+          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
       - save_cache:
           paths:
             - ~/.m2
@@ -71,14 +71,15 @@ jobs:
       - checkout
       - restore_cache:
           key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
+      - setup_remote_docker
       - run:
           name: Run APP 
           command: |
             docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
-            docker run --name helloworld-cicd --rm -it -e PORT -p 8080:8080/tcp helloworld-cicd:latest
+            docker run --name helloworld-cicd --rm -it -p 8080:8080/tcp helloworld-cicd:latest
       - run:
           name: Integration Tests
-          command: mvn verify
+          command: mvn verify -DskipUTs=true
       - save_cache:
           paths:
             - ~/.m2
