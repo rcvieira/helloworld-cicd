@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  commit-stage:
+  build-test-quality-deploy:
     docker:
       - image: circleci/openjdk:11-jdk-stretch      
     steps:
@@ -10,116 +10,54 @@ jobs:
           key: helloworld-cicd-{{ checksum "pom.xml" }}
       
       - run:
-          name: Build Step
+          name: Build
           command: |
             echo 'Compilando...'
             mvn clean package -DskipTests
 
       - run:
-          name: Test Step
+          name: Test
           command: |
             echo 'Testando...'
             mvn test
 
+      - run: 
+          name: Quality - Analyze on SonarCloud
+          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
+
       - store_test_results:
           path: target/surefire-reports
- 
+
       - save_cache:
           paths:
             - ~/.m2
           key: helloworld-cicd-{{ checksum "pom.xml" }}
-          
+
       - setup_remote_docker
 
       - run:
-          name: Prepare Push Docker Image - Install Docker & Heroku
+          name: Acceptance Tests - Run App 
+          command: |
+            docker build -t helloworld-cicd:latest .
+            docker run --name helloworld-cicd --rm -it -p 8080:8080/tcp helloworld-cicd:latest
+
+      - run:
+          name: Run Acceptance Tests
+          command: mvn verify -DskipUTs=true
+
+      - setup_remote_docker
+
+      - run:
+          name: Deploy - Install Heroku CLI
           command: |
             set -x
-            VER="18.09.3"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            sudo mv -f /tmp/docker/* /usr/bin
             curl -L -o /tmp/heroku-install.sh https://cli-assets.heroku.com/install.sh
             sh /tmp/heroku-install.sh
             heroku --version
       
       - run:
-          name: Push Docker Image do Heroku
+          name: Deploy - Install to Heroku
           command: |
             docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
             heroku container:push web -a $HEROKU_APP_NAME
-  
-  quality-stage:
-    docker:
-      - image: 'circleci/openjdk:11-jdk'
-    steps:
-      - checkout
-      - restore_cache:
-          key: helloworld-cicd-quality{{ checksum "pom.xml" }}
-      - run:
-          name: Analyze on SonarCloud
-          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: helloworld-cicd-quality{{ checksum "pom.xml" }}
-
-  acceptance-stage:
-    docker:
-      - image: circleci/openjdk:11-jdk-stretch
-    steps:
-      - checkout
-      - restore_cache:
-          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
-      - setup_remote_docker
-      - run:
-          name: Run APP 
-          command: |
-            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
-            docker run --name helloworld-cicd --rm -it -p 8080:8080/tcp helloworld-cicd:latest
-      - run:
-          name: Integration Tests
-          command: mvn verify -DskipUTs=true
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
-   
-  user-acceptance-stage:
-    docker:
-      - image: circleci/openjdk:11-jdk-stretch      
-    steps:               
-      - run:
-          name: Prepare Deploy do Heroku - Install Docker & Heroku
-          command: |
-            set -x
-            VER="18.09.3"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            sudo mv -f /tmp/docker/* /usr/bin
-            curl -L -o /tmp/heroku-install.sh https://cli-assets.heroku.com/install.sh
-            sh /tmp/heroku-install.sh
-            heroku --version
-      
-      - run:
-          name: Deploy to Heroku APP
-          command: |
-            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
             heroku container:release web -a $HEROKU_APP_NAME
-
-workflows:
-  version: 2
-  workflow-principal:
-    jobs:
-      - commit-stage
-      - quality-stage:
-          context: SonarCloud
-          requires:
-            - commit-stage
-      - acceptance-stage:
-          requires:
-            - commit-stage
-      - user-acceptance-stage:
-          requires:
-            - quality-stage
-            - acceptance-stage
