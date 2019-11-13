@@ -110,11 +110,15 @@ workflows:
   version: 2
   workflow-principal:
     jobs:
-      - build-phase
-      - quality-phase:
+      - commit-stage
+      - quality-stage:
           context: SonarCloud
           requires:
-            - build-phase      
-      - deploy-phase:
+            - commit-stage
+      - acceptance-stage:
           requires:
-            - quality-phase
+            - commit-stage
+      - user-acceptance-stage:
+          requires:
+            - quality-stage
+            - acceptance-stage
