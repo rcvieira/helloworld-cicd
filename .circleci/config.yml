@@ -40,6 +40,7 @@ jobs:
       - run:
           name: Acceptance Tests - Run App & Tests
           command: |
+            ls -la /home/circleci/project
             docker build -t helloworld-cicd:latest .
             docker run --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
             docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v /home/circleci/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true 
