@@ -38,9 +38,12 @@ jobs:
       - run:
           name: Acceptance Tests - Run App & Tests
           command: |
-            docker run --name postgres --rm -d -p 54320:5432 -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB postgres:11
+            # RUN Postgresql container
+            docker run --name postgres --rm -d -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB postgres:11
+            # BUILD AND RUN App container
             docker build -t helloworld-cicd:latest .
-            docker run --network container:postgres --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
+            docker run --network container:postgres --name helloworld-cicd --rm -d -e PORT helloworld-cicd:latest
+            # BUILD AND RUN Test container
             docker create -v /root --name configs alpine:3.4 /bin/true
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
