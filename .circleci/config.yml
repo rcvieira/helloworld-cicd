@@ -23,9 +23,9 @@ jobs:
             echo 'Testando...'
             mvn test
 
-      #- run: 
-      #    name: Quality - Analyze on SonarCloud
-      #    command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
+      - run: 
+          name: Quality - Analyze on SonarCloud
+          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
 
       - store_test_results:
           path: target/surefire-reports
@@ -37,7 +37,6 @@ jobs:
           command: |
             docker build -t helloworld-cicd:latest .
             docker run --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
-            # docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v /home/circleci/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true
             docker create -v /root --name configs alpine:3.4 /bin/true
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
