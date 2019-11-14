@@ -2,7 +2,9 @@ version: 2.1
 jobs:
   build-stage:
     docker:
-      - image: circleci/openjdk:11-jdk-stretch      
+      - image: circleci/openjdk:11-jdk-stretch
+    environment:
+      PORT: 8080    
     steps:
       - checkout
       
@@ -39,8 +41,8 @@ jobs:
           name: Acceptance Tests - Run App & Tests
           command: |
             docker build -t helloworld-cicd:latest .
-            docker run --name helloworld-cicd --rm -d -p 8080:8080/tcp helloworld-cicd:latest
-            docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v ~/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true 
+            docker run --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
+            docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v /home/circleci/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true 
 
       - store_test_results:
           path: target/failsafe-reports
