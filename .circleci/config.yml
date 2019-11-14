@@ -23,9 +23,9 @@ jobs:
             echo 'Testando...'
             mvn test
 
-      - run: 
-          name: Quality - Analyze on SonarCloud
-          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
+      #- run: 
+      #    name: Quality - Analyze on SonarCloud
+      #    command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
 
       - store_test_results:
           path: target/surefire-reports
@@ -40,16 +40,15 @@ jobs:
       - run:
           name: Acceptance Tests - Run App & Tests
           command: |
-            ls -la /home/circleci/project
+            ls -la .
+            ls -la $PWD
             docker build -t helloworld-cicd:latest .
             docker run --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
             # docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v /home/circleci/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true 
-            docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v /home/circleci/project:/usr/srv/mymaven -w /usr/srv/mymaven maven ls -la /usr/srv/mymaven
+            docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v ~/project:/usr/srv/mymaven -w /usr/srv/mymaven maven ls -la /root/.m2
 
       - store_test_results:
           path: target/failsafe-reports
-
-      - setup_remote_docker
 
       - run:
           name: Deploy - Install Heroku CLI
