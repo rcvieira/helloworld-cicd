@@ -21,7 +21,7 @@ jobs:
             mvn clean package -DskipTests
 
       - run:
-          name: Test
+          name: Unit Tests
           command: |
             echo 'Testando...'
             mvn test
@@ -38,16 +38,17 @@ jobs:
       - run:
           name: Acceptance Tests - Run App & Tests
           command: |
+            docker network create testeNet
             # RUN Postgresql container
-            docker run --name postgres --rm -d -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB postgres:11
+            docker run --name postgres --network=testeNet --rm -d -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB -p 54320:5432 postgres:11
             # BUILD AND RUN App container
             docker build -t helloworld-cicd:latest .
-            docker run --network container:postgres --name helloworld-cicd --rm -d -e PORT helloworld-cicd:latest
+            docker run --network=testeNet --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
             # BUILD AND RUN Test container
             docker create -v /root --name configs alpine:3.4 /bin/true
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
-            docker run --network container:postgres --name ITTests --volumes-from configs -w /root/project maven:3.6.2-jdk-11-openj9 mvn verify -DskipUTs=true
+            docker run --network=testeNet --name ITTests --volumes-from configs -w /root/project maven:3.6.2-jdk-11-openj9 mvn verify -DskipUTs=true
 
       - save_cache:
           paths:
