@@ -4,7 +4,10 @@ jobs:
     docker:
       - image: circleci/openjdk:11-jdk-stretch
     environment:
-      PORT: 8080    
+      - PORT: 8080
+      - POSTGRES_USER: cicd
+      - POSTGRES_PASSWORD: pwd0123456789
+      - POSTGRES_DB: helloworld-cicd-db        
     steps:
       - checkout
       
@@ -35,12 +38,13 @@ jobs:
       - run:
           name: Acceptance Tests - Run App & Tests
           command: |
+            docker run --name postgres --rm -d -p 54320:5432 -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB postgres:11
             docker build -t helloworld-cicd:latest .
-            docker run --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
+            docker run --network container:postgres --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
             docker create -v /root --name configs alpine:3.4 /bin/true
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
-            docker run --network container:helloworld-cicd --name ITTests --volumes-from configs -w /root/project maven:3.6.2-jdk-11-openj9 mvn verify -DskipUTs=true
+            docker run --network container:postgres --name ITTests --volumes-from configs -w /root/project maven:3.6.2-jdk-11-openj9 mvn verify -DskipUTs=true
 
       - save_cache:
           paths:

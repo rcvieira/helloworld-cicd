@@ -1,0 +1,117 @@
+version: 2.1
+jobs:
+  commit-stage:
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch      
+    steps:
+      - checkout
+      
+      - restore_cache:
+          key: helloworld-cicd-{{ checksum "pom.xml" }}
+      
+      - run:
+          name: Build Step
+          command: |
+            echo 'Compilando...'
+            mvn clean package -DskipTests
+
+      - run:
+          name: Test Step
+          command: |
+            echo 'Testando...'
+            mvn test
+
+      - store_test_results:
+          path: target/surefire-reports
+ 
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: helloworld-cicd-{{ checksum "pom.xml" }}
+          
+      - setup_remote_docker
+
+      - run:
+          name: Prepare Push Docker Image - Install Heroku
+          command: |
+            set -x
+            curl -L -o /tmp/heroku-install.sh https://cli-assets.heroku.com/install.sh
+            sh /tmp/heroku-install.sh
+            heroku --version
+      
+      - run:
+          name: Push Docker Image do Heroku
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            heroku container:push web -a $HEROKU_APP_NAME
+  
+  quality-stage:
+    docker:
+      - image: 'circleci/openjdk:11-jdk'
+    steps:
+      - checkout
+      - restore_cache:
+          key: helloworld-cicd-quality{{ checksum "pom.xml" }}
+      - run:
+          name: Analyze on SonarCloud
+          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: helloworld-cicd-quality{{ checksum "pom.xml" }}
+
+  acceptance-stage:
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch
+    steps:
+      - checkout
+      - restore_cache:
+          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
+      - setup_remote_docker
+      - run:
+          name: Run APP 
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            docker run --name helloworld-cicd --rm -it -p 8080:8080/tcp helloworld-cicd:latest
+      - run:
+          name: Integration Tests
+          command: mvn verify -DskipUTs=true
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: helloworld-cicd-acceptance{{ checksum "pom.xml" }}
+   
+  user-acceptance-stage:
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch      
+    steps:               
+      - run:
+          name: Prepare Deploy do Heroku - Install Heroku
+          command: |
+            set -x
+            curl -L -o /tmp/heroku-install.sh https://cli-assets.heroku.com/install.sh
+            sh /tmp/heroku-install.sh
+            heroku --version
+      
+      - run:
+          name: Deploy to Heroku APP
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+            heroku container:release web -a $HEROKU_APP_NAME
+
+workflows:
+  version: 2
+  workflow-principal:
+    jobs:
+      - commit-stage
+      - quality-stage:
+          context: SonarCloud
+          requires:
+            - commit-stage
+      - acceptance-stage:
+          requires:
+            - commit-stage
+      - user-acceptance-stage:
+          requires:
+            - quality-stage
+            - acceptance-stage

@@ -14,11 +14,21 @@ public class SmokeIT {
 	public void testPing() {
 
 		String REST_URI = "http://localhost:8080/helloworld-cicd/api/ping";
+		Client clienteRest = ClientBuilder.newClient();
+		
+		String retorno = clienteRest.target(REST_URI).request(MediaType.TEXT_PLAIN_TYPE).get(String.class);
 
+		assertEquals("Estamos bem!", retorno);
+	}
+	
+	@Test
+	public void testDatabasePing() {
+		
+		String REST_URI = "http://localhost:8080/helloworld-cicd/api/db-ping";
 		Client clienteRest = ClientBuilder.newClient();
 
 		String retorno = clienteRest.target(REST_URI).request(MediaType.TEXT_PLAIN_TYPE).get(String.class);
 
-		assertEquals("Estamos bem!", retorno);
+		assertEquals("Database online", retorno);
 	}
 }
