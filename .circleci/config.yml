@@ -36,14 +36,11 @@ jobs:
       - setup_remote_docker
 
       - run:
-          name: Acceptance Tests - Run App 
+          name: Acceptance Tests - Run App & Tests
           command: |
             docker build -t helloworld-cicd:latest .
             docker run --name helloworld-cicd --rm -d -p 8080:8080/tcp helloworld-cicd:latest
-
-      - run:
-          name: Run Acceptance Tests
-          command: mvn verify -DskipUTs=true
+            docker run --network container:helloworld-cicd --name ITTests -v ~/.m2:/root/.m2 -v ~/project:/usr/srv/mymaven -w /usr/srv/mymaven maven mvn verify -DskipUTs=true 
 
       - store_test_results:
           path: target/failsafe-reports
