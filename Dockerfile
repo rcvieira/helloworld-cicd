@@ -13,7 +13,7 @@ ENV DB_NAME helloworld-cicd-db
 ENV DB_USER cicd
 ENV DB_PASS pwd0123456789
 
-# Install postgres drivers and datasource
+# Install postgres drivers and datasource in Wildfly
 RUN /bin/sh -c '$JBOSS_HOME/bin/standalone.sh &' && \
   sleep 10 && \
   cd /tmp && \

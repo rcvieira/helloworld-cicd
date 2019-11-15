@@ -8,12 +8,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.junit.Test;
 
-public class SmokeIT {
+public class SmokeIT extends ITTeste {
 
 	@Test
 	public void testPing() {
 
-		String REST_URI = "http://localhost:8080/helloworld-cicd/api/ping";
+		String REST_URI = getAppURL().concat("/api/ping");
 		Client clienteRest = ClientBuilder.newClient();
 		
 		String retorno = clienteRest.target(REST_URI).request(MediaType.TEXT_PLAIN_TYPE).get(String.class);
@@ -24,7 +24,7 @@ public class SmokeIT {
 	@Test
 	public void testDatabasePing() {
 		
-		String REST_URI = "http://localhost:8080/helloworld-cicd/api/db-ping";
+		String REST_URI = getAppURL().concat("/api/db-ping");
 		Client clienteRest = ClientBuilder.newClient();
 
 		String retorno = clienteRest.target(REST_URI).request(MediaType.TEXT_PLAIN_TYPE).get(String.class);

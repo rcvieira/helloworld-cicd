@@ -7,7 +7,8 @@ jobs:
       - PORT: 8080
       - POSTGRES_USER: cicd
       - POSTGRES_PASSWORD: pwd0123456789
-      - POSTGRES_DB: helloworld-cicd-db        
+      - POSTGRES_DB: helloworld-cicd-db
+      - APP_HOST_URL: helloworld-cicd  
     steps:
       - checkout
       
@@ -40,15 +41,15 @@ jobs:
           command: |
             docker network create testeNet
             # RUN Postgresql container
-            docker run --name postgres --network=testeNet --rm -d -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB -p 54320:5432 postgres:11
+            docker run --name db --network=testeNet --rm -d -e POSTGRES_USER -e POSTGRES_PASSWORD -e POSTGRES_DB -p 54320:5432 postgres:11
             # BUILD AND RUN App container
             docker build -t helloworld-cicd:latest .
-            docker run --network=testeNet --name helloworld-cicd --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
+            docker run --network=testeNet --name ${APP_HOST_URL} --rm -d -e PORT -p 8080:$PORT/tcp helloworld-cicd:latest
             # BUILD AND RUN Test container
             docker create -v /root --name configs alpine:3.4 /bin/true
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
-            docker run --network=testeNet --name ITTests --volumes-from configs -w /root/project maven:3.6.2-jdk-11-openj9 mvn verify -DskipUTs=true
+            docker run --network=testeNet --name ITTests --volumes-from configs -e APP_HOST_URL -e PORT -w /root/project maven:3.6.2-jdk-11-openj9 mvn -DskipUTs=true -DargLine="-DAPP_HOST_URL=${APP_HOST_URL} -DPORT=${PORT}" verify
 
       - save_cache:
           paths:
