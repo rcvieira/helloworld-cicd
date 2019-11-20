@@ -27,10 +27,6 @@ jobs:
             echo 'Testando...'
             mvn test
 
-      - run: 
-          name: Quality - Analyze on SonarCloud
-          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
-
       - store_test_results:
           path: target/surefire-reports
 
@@ -50,14 +46,19 @@ jobs:
             docker cp ~/.m2 configs:/root/.m2
             docker cp ~/project configs:/root/project
             docker run --network=testeNet --name ITTests --volumes-from configs -e APP_HOST_URL -e PORT -w /root/project maven:3.6.2-jdk-11-openj9 mvn -DskipUTs=true -DargLine="-DAPP_HOST_URL=${APP_HOST_URL} -DPORT=${PORT}" verify
+            docker cp ITTests:/root/project/target/failsafe-reports ~/project/target/failsafe-reports
+
+      - store_test_results:
+          path: target/failsafe-reports
+
+      - run: 
+          name: Quality - Analyze on SonarCloud
+          command: mvn verify -DskipTests=true sonar:sonar -Dsonar.projectKey=rcvieira_helloworld-cicd -Dsonar.organization=rcvieira -Dsonar.host.url=https://sonarcloud.io
 
       - save_cache:
           paths:
             - ~/.m2
           key: helloworld-cicd-{{ checksum "pom.xml" }}
-
-      - store_test_results:
-          path: target/failsafe-reports
 
       - run:
           name: Deploy - Install Heroku CLI
